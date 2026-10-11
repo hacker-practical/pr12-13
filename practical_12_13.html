@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ASP.NET Practical 12 and 13</title>
+<style>
+  :root{
+    --bg:#0f1420; --panel:#171e2e; --panel2:#1d2639; --line:#2a3550;
+    --text:#e6ebf5; --muted:#8d9ab5; --accent:#4f8cff; --ok:#2ecc71;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif;line-height:1.5}
+  header{padding:22px 16px 10px;max-width:980px;margin:0 auto}
+  header h1{margin:0;font-size:1.4rem}
+  header p{margin:4px 0 0;color:var(--muted);font-size:.9rem}
+  .tabs{max-width:980px;margin:12px auto 0;padding:0 16px;display:flex;gap:8px;flex-wrap:wrap}
+  .tab{background:var(--panel);color:var(--muted);border:1px solid var(--line);padding:10px 16px;border-radius:10px;cursor:pointer;font-size:.95rem}
+  .tab.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+  main{max-width:980px;margin:0 auto;padding:16px}
+  .aim{background:var(--panel);border-left:4px solid var(--accent);padding:12px 14px;border-radius:8px;margin-bottom:16px;font-size:.92rem;color:#c9d3e8}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;margin-bottom:16px;overflow:hidden}
+  .card-head{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 14px;background:var(--panel2);border-bottom:1px solid var(--line)}
+  .fname{font-weight:600;font-size:.95rem;word-break:break-all}
+  .tag{font-size:.72rem;color:var(--muted);margin-left:8px;font-weight:400}
+  .copy{background:var(--accent);color:#fff;border:0;border-radius:8px;padding:8px 14px;cursor:pointer;font-size:.85rem;white-space:nowrap}
+  .copy:hover{filter:brightness(1.1)}
+  .copy.done{background:var(--ok)}
+  .copy.alt{background:#2c3a5c}
+  .allbar{display:flex;justify-content:flex-end;margin-bottom:12px}
+  pre{margin:0;padding:14px;overflow:auto;max-height:480px;font-family:Consolas,Menlo,monospace;font-size:.83rem;line-height:1.5;color:#dbe4f7;tab-size:4}
+  #toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(30px);background:var(--ok);color:#06210f;padding:9px 18px;border-radius:999px;font-weight:600;opacity:0;transition:.25s;pointer-events:none}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  @media(max-width:560px){.card-head{flex-direction:column;align-items:flex-start}.copy{width:100%}}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>ASP.NET Practical - Code Copy Page</h1>
+  <p>Practical 12 and 13 &middot; every file has its own Copy button</p>
+</header>
+
+<div class="tabs">
+  <button class="tab active" data-target="p12">Practical 12</button>
+  <button class="tab" data-target="p13">Practical 13</button>
+</div>
+
+<main>
+  <section id="p12">
+    <div class="aim"><b>Aim:</b> Database programs with ASP.NET and ADO.NET. Create a Login Module which adds Username and Password in the database. Username in the database should be a primary key.</div>
+    <div class="allbar"><button class="copy alt" data-all="p12">Copy all files of Practical 12</button></div>
+    <div class="files" id="files-p12"></div>
+  </section>
+
+  <section id="p13" hidden>
+    <div class="aim"><b>Aim:</b> Create a web application to insert 3 records inside the SQL database table having fields (DeptId, DeptName, EmpName, Salary). Update the salary for any one employee and increment it by 15% of the present salary. Perform delete operation on 1 row of the table.</div>
+    <div class="allbar"><button class="copy alt" data-all="p13">Copy all files of Practical 13</button></div>
+    <div class="files" id="files-p13"></div>
+  </section>
+</main>
+
+<div id="toast">Copied!</div>
+
+<!-- ===================== PRACTICAL 12 ===================== -->
+<script type="text/plain" data-p="p12" data-name="Database (SQL)" data-tag="SQL">CREATE TABLE LoginUsers
+(
+    Username VARCHAR(50) PRIMARY KEY, -- Primary key: no duplicate usernames
+    Password VARCHAR(100) NOT NULL
+);</script>
+
+<script type="text/plain" data-p="p12" data-name="Web.config" data-tag="connection string">&lt;connectionStrings&gt;
+  &lt;add name="LoginDBConnectionString"
+       connectionString="Data Source=(LocalDB)\MSSQLLocalDB;AttachDbFilename=|DataDirectory|\LoginDB.mdf;Integrated Security=True"
+       providerName="System.Data.SqlClient" /&gt;
+&lt;/connectionStrings&gt;</script>
+
+<script type="text/plain" data-p="p12" data-name="Login.aspx" data-tag="design">&lt;%@ Page Language="C#" AutoEventWireup="true" CodeBehind="Login.aspx.cs"
+    Inherits="pr12.Login" %&gt;
+&lt;html&gt;
+&lt;body&gt;
+&lt;form id="form1" runat="server"&gt;
+    &lt;h2&gt;User Registration / Login&lt;/h2&gt;
+    Username: &lt;asp:TextBox ID="txtUsername" runat="server" /&gt;&lt;br /&gt;&lt;br /&gt;
+    Password: &lt;asp:TextBox ID="txtPassword" runat="server" TextMode="Password" /&gt;&lt;br /&gt;&lt;br /&gt;
+    &lt;asp:Button ID="btnRegister" runat="server" Text="Register" OnClick="btnRegister_Click" /&gt;
+    &lt;asp:Button ID="btnLogin" runat="server" Text="Login" OnClick="btnLogin_Click" /&gt;
+    &lt;br /&gt;&lt;br /&gt;
+    &lt;asp:Label ID="lblMessage" runat="server" Font-Bold="true" /&gt;
+&lt;/form&gt;
+&lt;/body&gt;
+&lt;/html&gt;</script>
+
+<script type="text/plain" data-p="p12" data-name="Login.aspx.cs" data-tag="code behind">using System;
+using System.Configuration;
+using System.Data.SqlClient;
+using System.Security.Cryptography;
+using System.Text;
+using System.Drawing;
+
+namespace pr12
+{
+    public partial class Login : System.Web.UI.Page
+    {
+        string cs = ConfigurationManager
+            .ConnectionStrings["LoginDBConnectionString"].ConnectionString;
+
+        protected void Page_Load(object sender, EventArgs e)
+        {
+        }
+
+        // Passwords are stored as SHA-256 hash, not as plain text
+        private string Hash(string text)
+        {
+            using (SHA256 sha = SHA256.Create())
+            {
+                byte[] bytes = sha.ComputeHash(Encoding.UTF8.GetBytes(text));
+                StringBuilder sb = new StringBuilder();
+                foreach (byte b in bytes) sb.Append(b.ToString("x2"));
+                return sb.ToString();
+            }
+        }
+
+        protected void btnRegister_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                using (SqlConnection con = new SqlConnection(cs))
+                using (SqlCommand cmd = new SqlCommand(
+                    "INSERT INTO LoginUsers (Username, Password) VALUES (@u, @p)", con))
+                {
+                    cmd.Parameters.AddWithValue("@u", txtUsername.Text);
+                    cmd.Parameters.AddWithValue("@p", Hash(txtPassword.Text));
+                    con.Open();
+                    cmd.ExecuteNonQuery();
+                }
+                lblMessage.ForeColor = Color.Green;
+                lblMessage.Text = "User registered successfully";
+            }
+            catch (SqlException ex)
+            {
+                // 2627 / 2601 = primary key (duplicate username) violation
+                lblMessage.ForeColor = Color.Red;
+                if (ex.Number == 2627 || ex.Number == 2601)
+                    lblMessage.Text = "Username already exists. Choose another username.";
+                else
+                    lblMessage.Text = "Error: " + ex.Message;
+            }
+        }
+
+        protected void btnLogin_Click(object sender, EventArgs e)
+        {
+            using (SqlConnection con = new SqlConnection(cs))
+            using (SqlCommand cmd = new SqlCommand(
+                "SELECT COUNT(*) FROM LoginUsers WHERE Username=@u AND Password=@p", con))
+            {
+                cmd.Parameters.AddWithValue("@u", txtUsername.Text);
+                cmd.Parameters.AddWithValue("@p", Hash(txtPassword.Text));
+                con.Open();
+                int count = (int)cmd.ExecuteScalar();
+                if (count == 1)
+                {
+                    lblMessage.ForeColor = Color.Green;
+                    lblMessage.Text = "Login successful. Welcome, " + txtUsername.Text;
+                }
+                else
+                {
+                    lblMessage.ForeColor = Color.Red;
+                    lblMessage.Text = "Invalid username or password";
+                }
+            }
+        }
+    }
+}</script>
+
+<!-- ===================== PRACTICAL 13 ===================== -->
+<script type="text/plain" data-p="p13" data-name="Database (SQL)" data-tag="SQL">CREATE TABLE Employee
+(
+    EmpId INT PRIMARY KEY IDENTITY(1,1),
+    DeptId INT,
+    DeptName VARCHAR(100),
+    EmpName VARCHAR(100),
+    Salary DECIMAL(10,2)
+);</script>
+
+<script type="text/plain" data-p="p13" data-name="Web.config" data-tag="connection string">&lt;connectionStrings&gt;
+  &lt;add name="EmployeeCRUDDBConnectionString"
+       connectionString="Data Source=(LocalDB)\MSSQLLocalDB;AttachDbFilename=|DataDirectory|\EmployeeCRUDDB.mdf;Integrated Security=True"
+       providerName="System.Data.SqlClient" /&gt;
+&lt;/connectionStrings&gt;</script>
+
+<script type="text/plain" data-p="p13" data-name="Employee.aspx" data-tag="design">&lt;%@ Page Language="C#" AutoEventWireup="true" CodeBehind="Employee.aspx.cs"
+    Inherits="EmployeeCRUDProject.Employee" %&gt;
+&lt;html&gt;
+&lt;body&gt;
+&lt;form id="form1" runat="server"&gt;
+    Dept Id: &lt;asp:TextBox ID="txtDeptId" runat="server" /&gt;&lt;br /&gt;&lt;br /&gt;
+    Department Name: &lt;asp:TextBox ID="txtDeptName" runat="server" /&gt;&lt;br /&gt;&lt;br /&gt;
+    Employee Name: &lt;asp:TextBox ID="txtEmpName" runat="server" /&gt;&lt;br /&gt;&lt;br /&gt;
+    Salary: &lt;asp:TextBox ID="txtSalary" runat="server" /&gt;&lt;br /&gt;&lt;br /&gt;
+    &lt;asp:Button ID="btnInsert" runat="server" Text="Insert Record"
+        OnClick="btnInsert_Click" /&gt;&lt;br /&gt;&lt;br /&gt;
+    &lt;asp:Label ID="lblMessage" runat="server" ForeColor="Green" /&gt;
+    &lt;asp:GridView ID="GridView1" runat="server" AutoGenerateColumns="False"
+        DataKeyNames="EmpId" OnRowCommand="GridView1_RowCommand"&gt;
+        &lt;Columns&gt;
+            &lt;asp:BoundField DataField="EmpId" HeaderText="EmpId" /&gt;
+            &lt;asp:BoundField DataField="DeptId" HeaderText="DeptId" /&gt;
+            &lt;asp:BoundField DataField="DeptName" HeaderText="DeptName" /&gt;
+            &lt;asp:BoundField DataField="EmpName" HeaderText="EmpName" /&gt;
+            &lt;asp:BoundField DataField="Salary" HeaderText="Salary" /&gt;
+            &lt;asp:ButtonField CommandName="Raise" Text="Raise 15%" /&gt;
+            &lt;asp:ButtonField CommandName="Remove" Text="Delete" /&gt;
+        &lt;/Columns&gt;
+    &lt;/asp:GridView&gt;
+&lt;/form&gt;
+&lt;/body&gt;
+&lt;/html&gt;</script>
+
+<script type="text/plain" data-p="p13" data-name="Employee.aspx.cs" data-tag="code behind">using System;
+using System.Configuration;
+using System.Data;
+using System.Data.SqlClient;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+
+namespace EmployeeCRUDProject
+{
+    public partial class Employee : System.Web.UI.Page
+    {
+        string cs = ConfigurationManager
+            .ConnectionStrings["EmployeeCRUDDBConnectionString"].ConnectionString;
+
+        protected void Page_Load(object sender, EventArgs e)
+        {
+            if (!IsPostBack)
+                BindGrid();
+        }
+
+        private void BindGrid()
+        {
+            using (SqlConnection con = new SqlConnection(cs))
+            using (SqlDataAdapter da = new SqlDataAdapter("SELECT * FROM Employee", con))
+            {
+                DataTable dt = new DataTable();
+                da.Fill(dt);
+                GridView1.DataSource = dt;
+                GridView1.DataBind();
+            }
+        }
+
+        // INSERT - run three times to add 3 records
+        protected void btnInsert_Click(object sender, EventArgs e)
+        {
+            using (SqlConnection con = new SqlConnection(cs))
+            using (SqlCommand cmd = new SqlCommand(
+                "INSERT INTO Employee (DeptId, DeptName, EmpName, Salary) " +
+                "VALUES (@DeptId, @DeptName, @EmpName, @Salary)", con))
+            {
+                cmd.Parameters.AddWithValue("@DeptId", Convert.ToInt32(txtDeptId.Text));
+                cmd.Parameters.AddWithValue("@DeptName", txtDeptName.Text);
+                cmd.Parameters.AddWithValue("@EmpName", txtEmpName.Text);
+                cmd.Parameters.AddWithValue("@Salary", Convert.ToDecimal(txtSalary.Text));
+                con.Open();
+                cmd.ExecuteNonQuery();
+            }
+            txtDeptId.Text = txtDeptName.Text = txtEmpName.Text = txtSalary.Text = "";
+            lblMessage.Text = "Record Inserted Successfully";
+            BindGrid();
+        }
+
+        // UPDATE (increase salary by 15%) and DELETE
+        protected void GridView1_RowCommand(object sender, GridViewCommandEventArgs e)
+        {
+            int rowIndex = Convert.ToInt32(e.CommandArgument);
+            int id = Convert.ToInt32(GridView1.DataKeys[rowIndex].Value);
+
+            if (e.CommandName == "Raise")
+            {
+                using (SqlConnection con = new SqlConnection(cs))
+                using (SqlCommand cmd = new SqlCommand(
+                    "UPDATE Employee SET Salary = Salary + (Salary * 15 / 100) " +
+                    "WHERE EmpId = @id", con))
+                {
+                    cmd.Parameters.AddWithValue("@id", id);
+                    con.Open();
+                    cmd.ExecuteNonQuery();
+                }
+                lblMessage.Text = "Salary increased by 15% successfully";
+            }
+            else if (e.CommandName == "Remove")
+            {
+                using (SqlConnection con = new SqlConnection(cs))
+                using (SqlCommand cmd = new SqlCommand(
+                    "DELETE FROM Employee WHERE EmpId = @id", con))
+                {
+                    cmd.Parameters.AddWithValue("@id", id);
+                    con.Open();
+                    cmd.ExecuteNonQuery();
+                }
+                lblMessage.Text = "Record Deleted Successfully";
+            }
+            BindGrid();
+        }
+    }
+}</script>
+
+<script>
+(function () {
+  // Decode the HTML entities used inside the text/plain blocks into real code
+  function decode(s) {
+    var t = document.createElement('textarea');
+    t.innerHTML = s;
+    return t.value;
+  }
+
+  var store = { p12: [], p13: [] };
+
+  document.querySelectorAll('script[type="text/plain"]').forEach(function (el) {
+    var p = el.dataset.p;
+    var code = decode(el.textContent).replace(/^\n+|\n+$/g, '');
+    store[p].push({ name: el.dataset.name, tag: el.dataset.tag, code: code });
+  });
+
+  function toast(msg) {
+    var t = document.getElementById('toast');
+    t.textContent = msg || 'Copied!';
+    t.classList.add('show');
+    setTimeout(function () { t.classList.remove('show'); }, 1400);
+  }
+
+  function copyText(text, btn, label) {
+    function ok() {
+      if (btn) {
+        var old = btn.textContent;
+        btn.textContent = 'Copied!';
+        btn.classList.add('done');
+        setTimeout(function () { btn.textContent = old; btn.classList.remove('done'); }, 1400);
+      }
+      toast(label);
+    }
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(text).then(ok, fallback);
+    } else { fallback(); }
+    function fallback() {
+      var ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand('copy'); ok(); } catch (e) { toast('Copy failed'); }
+      document.body.removeChild(ta);
+    }
+  }
+
+  ['p12', 'p13'].forEach(function (p) {
+    var box = document.getElementById('files-' + p);
+    store[p].forEach(function (f) {
+      var card = document.createElement('div');
+      card.className = 'card';
+
+      var head = document.createElement('div');
+      head.className = 'card-head';
+
+      var title = document.createElement('div');
+      title.className = 'fname';
+      title.textContent = f.name;
+      var tag = document.createElement('span');
+      tag.className = 'tag';
+      tag.textContent = f.tag;
+      title.appendChild(tag);
+
+      var btn = document.createElement('button');
+      btn.className = 'copy';
+      btn.textContent = 'Copy code';
+      btn.addEventListener('click', function () { copyText(f.code, btn, f.name + ' copied!'); });
+
+      head.appendChild(title);
+      head.appendChild(btn);
+
+      var pre = document.createElement('pre');
+      pre.textContent = f.code;
+
+      card.appendChild(head);
+      card.appendChild(pre);
+      box.appendChild(card);
+    });
+  });
+
+  document.querySelectorAll('[data-all]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var p = b.dataset.all;
+      var all = store[p].map(function (f) {
+        return '// ===== ' + f.name + ' =====\n' + f.code;
+      }).join('\n\n');
+      copyText(all, b, 'All files copied!');
+    });
+  });
+
+  document.querySelectorAll('.tab').forEach(function (tab) {
+    tab.addEventListener('click', function () {
+      document.querySelectorAll('.tab').forEach(function (t) { t.classList.remove('active'); });
+      tab.classList.add('active');
+      ['p12', 'p13'].forEach(function (p) {
+        document.getElementById(p).hidden = (p !== tab.dataset.target);
+      });
+    });
+  });
+})();
+</script>
+</body>
+</html>
